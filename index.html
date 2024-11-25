@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Logout Time Calculator</title>
+    <style>
+        :root {
+            --background: #ece9e6;
+            --container-bg: white;
+            --text-color: #2c3e50;
+            --box-shadow: rgba(0, 0, 0, 0.2);
+            --input-bg: #ffffff;
+            --input-border: #ccc;
+        }
+
+        body.dark-mode {
+            --background: #2c3e50;
+            --container-bg: #3b3b3b;
+            --text-color: #f1f1f1;
+            --box-shadow: rgba(0, 0, 0, 0.5);
+            --input-bg: #4a4a4a;
+            --input-border: #555;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        body {
+            font-family: 'Arial', sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background: var(--background);
+            color: var(--text-color);
+            margin: 0;
+            transition: background 0.3s, color 0.3s;
+        }
+        .container {
+            background: var(--container-bg);
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 10px 20px var(--box-shadow);
+            max-width: 600px;
+            width: 100%;
+            text-align: center;
+        }
+        h2 {
+            margin-bottom: 20px;
+        }
+        label, input, .output-container {
+            font-size: 18px;
+            margin-bottom: 15px;
+            display: block;
+            width: 100%;
+        }
+        input[type="time"] {
+            padding: 10px;
+            border: 1px solid var(--input-border);
+            background: var(--input-bg);
+            border-radius: 4px;
+            font-size: 16px;
+            margin-top: 5px;
+            width: 100%;
+            max-width: 300px;
+            margin: 0 auto;
+            color: var(--text-color);
+            transition: background 0.3s, border 0.3s, color 0.3s;
+        }
+        .toggle-container {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-top: 10px;
+        }
+        .toggle-label {
+            margin-right: 10px;
+            font-size: 16px;
+        }
+        .toggle-switch {
+            position: relative;
+            display: inline-block;
+            width: 34px;
+            height: 20px;
+        }
+        .toggle-switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            transition: 0.4s;
+            border-radius: 20px;
+        }
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 12px;
+            width: 12px;
+            left: 4px;
+            bottom: 4px;
+            background-color: white;
+            transition: 0.4s;
+            border-radius: 50%;
+        }
+        input:checked + .slider {
+            background-color: #3498db;
+        }
+        input:checked + .slider:before {
+            transform: translateX(14px);
+        }
+        #logoutTime {
+            font-size: 24px;
+            color: green;
+            margin-top: 15px;
+        }
+        #remainingTime {
+            font-size: 18px;
+            color: red;
+        }
+        #currentTime {
+            font-size: 18px;
+            margin-top: 20px;
+        }
+        .mode-toggle {
+            margin-top: 20px;
+            cursor: pointer;
+            padding: 10px 20px;
+            background: var(--text-color);
+            color: var(--container-bg);
+            border: none;
+            border-radius: 4px;
+            font-size: 16px;
+            transition: background 0.3s, color 0.3s;
+        }
+        .mode-toggle:hover {
+            opacity: 0.8;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>Real-Time Logout Time Calculator</h2>
+        <label for="startTime">Enter Login Time (24-hour format HH:MM):</label>
+        <input type="time" id="startTime" required>
+        
+        <div class="toggle-container">
+            <span class="toggle-label">7.5-hour workday</span>
+            <label class="toggle-switch">
+                <input type="checkbox" id="useScheme">
+                <span class="slider"></span>
+            </label>
+        </div>
+
+        <div id="logoutTime" class="output-container"></div>
+        <div id="remainingTime" class="output-container"></div>
+        <div id="currentTime" class="output-container"></div>
+        
+        <button class="mode-toggle" id="themeToggle">Switch to Dark Mode</button>
+    </div>
+
+    <script>
+        let logoutDate; // Global variable for logout time
+
+        function updateLogoutTime() {
+            const startTimeInput = document.getElementById('startTime').value;
+            const useScheme = document.getElementById('useScheme').checked;
+
+            if (!startTimeInput) {
+                document.getElementById('logoutTime').innerText = "Please enter a valid login time.";
+                document.getElementById('remainingTime').innerText = "";
+                return;
+            }
+
+            const [hours, minutes] = startTimeInput.split(':').map(Number);
+            const startDate = new Date();
+            startDate.setHours(hours, minutes, 0);
+
+            const workDuration = useScheme ? 7.5 : 8.5;
+            logoutDate = new Date(startDate.getTime() + workDuration * 60 * 60 * 1000);
+
+            const logoutHours = String(logoutDate.getHours()).padStart(2, '0');
+            const logoutMinutes = String(logoutDate.getMinutes()).padStart(2, '0');
+            document.getElementById('logoutTime').innerText = `Your logout time is: ${logoutHours}:${logoutMinutes}`;
+        }
+
+        function updateRemainingTime() {
+            const now = new Date();
+            if (logoutDate) {
+                const remainingTimeMs = logoutDate - now;
+
+                if (remainingTimeMs > 0) {
+                    const remainingHours = Math.floor(remainingTimeMs / (1000 * 60 * 60));
+                    const remainingMinutes = Math.floor((remainingTimeMs % (1000 * 60 * 60)) / (1000 * 60));
+                    const remainingSeconds = Math.floor((remainingTimeMs % (1000 * 60)) / 1000);
+                    document.getElementById('remainingTime').innerText = `Time remaining: ${remainingHours}h ${remainingMinutes}m ${remainingSeconds}s`;
+                } else {
+                    document.getElementById('remainingTime').innerText = "Logout time has passed!";
+                }
+            }
+        }
+
+        function updateCurrentTime() {
+            const now = new Date();
+            const hours = String(now.getHours()).padStart(2, '0');
+            const minutes = String(now.getMinutes()).padStart(2, '0');
+            const seconds = String(now.getSeconds()).padStart(2, '0');
+            document.getElementById('currentTime').innerText = `Current Time: ${hours}:${minutes}:${seconds}`;
+        }
+
+        function toggleTheme() {
+            const body = document.body;
+            const themeToggle = document.getElementById('themeToggle');
+            body.classList.toggle('dark-mode');
+            themeToggle.innerText = body.classList.contains('dark-mode') 
+                ? "Switch to Light Mode" 
+                : "Switch to Dark Mode";
+        }
+
+        // Set up periodic updates
+        setInterval(updateCurrentTime, 1000);
+        setInterval(updateRemainingTime, 1000);
+
+        // Attach event listeners
+        document.getElementById('startTime').addEventListener('change', updateLogoutTime);
+        document.getElementById('useScheme').addEventListener('change', updateLogoutTime);
+        document.getElementById('themeToggle').addEventListener('click', toggleTheme);
+    </script>
+</body>
+</html>
